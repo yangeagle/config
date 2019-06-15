@@ -1,2 +1,3 @@
-# little-kitty
-config parse
+# kitty
+
+configuration parse
