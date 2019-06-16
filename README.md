@@ -1,3 +1,5 @@
 # kitty
 
-configuration parse
+configuration parser
+
+Use tab indentation for hierarchical definition.

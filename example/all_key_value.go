@@ -13,7 +13,7 @@ func main() {
 	configFile := "./test.conf"
 
 	if err := conf.ParseFile(configFile); err != nil {
-		fmt.Printf("parse file %s failed", configFile)
+		fmt.Printf("parse file %s failed: %s", configFile, err)
 		return
 	}
 

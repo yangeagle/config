@@ -17,9 +17,12 @@ limitations under the License.
 package kitty
 
 import (
+	"bufio"
 	"bytes"
+	"fmt"
 	"io"
 	"os"
+	"strings"
 )
 
 const (
@@ -33,7 +36,7 @@ Config type declaration
 */
 type Config struct {
 	data  section    // all key-value
-	order []*section // level
+	order []*section // current section in every level
 }
 
 /*
@@ -88,6 +91,27 @@ func (c *Config) ReturnAll() section {
 	return c.data
 }
 
+func (c *Config) getCurrentLevel(s string) (int, error) {
+	tabCount, err := getTabCount(s)
+	if err != nil {
+		return 0, err
+	}
+
+	return tabCount + 1, nil
+
+}
+
+//get current section
+func (c *Config) getCurrentSection(currentLevel int) (*section, error) {
+
+	levelCount := len(c.order)
+	if currentLevel > levelCount {
+		return nil, fmt.Errorf("syntax error: please check indentation.")
+	}
+
+	return c.order[currentLevel-1], nil
+}
+
 /*
 read string line by line
 
@@ -99,5 +123,103 @@ special symbol definition:
 
 */
 func (c *Config) parse(reader io.Reader) error {
+
+	var (
+		err  error
+		row  string
+		rd   = bufio.NewReader(reader)
+		line int
+	)
+
+	for {
+		line++
+
+		row, err = rd.ReadString('\n')
+		if err != nil {
+			if err == io.EOF {
+				if len(row) == 0 {
+					// file end
+					break
+				}
+			} else {
+				// error
+				return err
+			}
+		}
+
+		rowNospace := strings.TrimSpace(row)
+		//none line or comment (line start with "#")
+		if len(rowNospace) == 0 || strings.HasPrefix(rowNospace, "#") {
+			continue
+		}
+
+		currentLevel, err := c.getCurrentLevel(row)
+		if err != nil {
+			fmt.Printf("getCurrentLevel failed in line %d:%s\n", line, err)
+			return fmt.Errorf("unexpected error:%s", err)
+		}
+
+		levelCount := len(c.order)
+
+		currentSection, err := c.getCurrentSection(currentLevel)
+		if err != nil {
+			fmt.Printf("getCurrentSection failed in line %d:%s\n", line, err)
+			return fmt.Errorf("unexpected error:%s", err)
+		}
+
+		row = rowNospace
+		rowLen := len(row)
+
+		//section[[]]
+		if strings.HasPrefix(row, "[[") && strings.HasSuffix(row, "]]") {
+			// todo
+
+		} else if strings.HasPrefix(row, "[") && strings.HasSuffix(row, "]") { //section []
+
+			key := row[1 : rowLen-1]
+			key = strings.TrimSpace(key)
+
+			value, ok := (*currentSection)[key]
+			if !ok {
+				newSection := section{}
+				(*currentSection)[key] = newSection
+
+				if currentLevel < levelCount {
+					// update current section
+					c.order[currentLevel] = &newSection
+				} else if currentLevel == levelCount {
+					// new level
+					c.order = append(c.order, &newSection)
+				}
+
+			} else {
+				return fmt.Errorf("%s:%s duplicate definition in line %d", key, value, line)
+			}
+
+		} else if index := strings.Index(row, "="); index >= 0 { //spliter: "="
+
+			key := row[:index]
+			key = strings.TrimSpace(key)
+
+			value, ok := (*currentSection)[key]
+			if !ok {
+				valueTmp := row[index+1:]
+				valueTmp = strings.TrimSpace(valueTmp)
+
+				(*currentSection)[key] = valueTmp
+
+				//for test
+				fmt.Println("--->", *currentSection)
+			} else {
+				return fmt.Errorf("%s:%s already exist", key, value)
+
+			}
+
+		} else {
+			return fmt.Errorf("missing symbol in line %d", line)
+		}
+
+	} //for
+
 	return nil
 }

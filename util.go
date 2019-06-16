@@ -25,12 +25,11 @@ import (
 * get the count of tab
  */
 func getTabCount(s string) (int, error) {
+	var count int
 
 	if len(s) == 0 {
 		return -1, fmt.Errorf("empty string")
 	}
-
-	var count int
 
 	originString := s
 	newString := strings.TrimSpace(originString)
