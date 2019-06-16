@@ -33,7 +33,7 @@ func getTabCount(s string) (int, error) {
 	var count int
 
 	originString := s
-	newString = strings.TrimSpace(originString)
+	newString := strings.TrimSpace(originString)
 
 	if index := strings.IndexRune(originString, rune(newString[0])); index > 0 {
 		spacePart := originString[:index]

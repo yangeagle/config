@@ -17,12 +17,9 @@ limitations under the License.
 package kitty
 
 import (
-	"bufio"
 	"bytes"
-	"fmt"
 	"io"
 	"os"
-	"strings"
 )
 
 const (
@@ -87,9 +84,8 @@ func (c *Config) ParseBytes(conf []byte) error {
 /*
 * return all key-value in map
  */
-func (c *Config) ReturnAll() (m map[string]interface{}) {
+func (c *Config) ReturnAll() section {
 	return c.data
-
 }
 
 /*
