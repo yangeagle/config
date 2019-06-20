@@ -35,8 +35,8 @@ type section map[string]interface{}
 Config type declaration
 */
 type Config struct {
-	data  section    // all key-value
-	order []*section // current section in every level
+	data  section   // all key-value
+	order []section // current section in every level
 }
 
 /*
@@ -47,8 +47,8 @@ func NewConfig() *Config {
 	conf := Config{}
 
 	conf.data = section{}
-	conf.order = make([]*section, 0)
-	conf.order = append(conf.order, &(conf.data))
+	conf.order = make([]section, 0)
+	conf.order = append(conf.order, conf.data)
 
 	return &conf
 }
@@ -102,7 +102,7 @@ func (c *Config) getCurrentLevel(s string) (int, error) {
 }
 
 //get current section
-func (c *Config) getCurrentSection(currentLevel int) (*section, error) {
+func (c *Config) getCurrentSection(currentLevel int) (section, error) {
 
 	levelCount := len(c.order)
 	if currentLevel > levelCount {
@@ -179,17 +179,17 @@ func (c *Config) parse(reader io.Reader) error {
 			key := row[1 : rowLen-1]
 			key = strings.TrimSpace(key)
 
-			value, ok := (*currentSection)[key]
+			value, ok := currentSection[key]
 			if !ok {
 				newSection := section{}
-				(*currentSection)[key] = newSection
+				currentSection[key] = newSection
 
 				if currentLevel < levelCount {
 					// update current section
-					c.order[currentLevel] = &newSection
+					c.order[currentLevel] = newSection
 				} else if currentLevel == levelCount {
 					// new level
-					c.order = append(c.order, &newSection)
+					c.order = append(c.order, newSection)
 				}
 
 			} else {
@@ -201,15 +201,15 @@ func (c *Config) parse(reader io.Reader) error {
 			key := row[:index]
 			key = strings.TrimSpace(key)
 
-			value, ok := (*currentSection)[key]
+			value, ok := currentSection[key]
 			if !ok {
 				valueTmp := row[index+1:]
 				valueTmp = strings.TrimSpace(valueTmp)
 
-				(*currentSection)[key] = valueTmp
+				currentSection[key] = valueTmp
 
 				//for test
-				fmt.Println("--->", *currentSection)
+				fmt.Println("--->", currentSection)
 			} else {
 				return fmt.Errorf("%s:%s already exist", key, value)
 
