@@ -35,7 +35,7 @@ type section map[string]interface{}
 Config type declaration
 */
 type Config struct {
-	data  section   // all key-value
+	data  section   // the top level section, including all key-value
 	order []section // current section in every level
 }
 
@@ -43,7 +43,6 @@ type Config struct {
 * NewConfig create a instance of Config
  */
 func NewConfig() *Config {
-
 	conf := Config{}
 
 	conf.data = section{}
@@ -112,18 +111,37 @@ func (c *Config) getCurrentSection(currentLevel int) (section, error) {
 	return c.order[currentLevel-1], nil
 }
 
+func (c *Config) updateOrAddLevel(currentLevel int) (section, error) {
+	levelCount := len(c.order)
+	if currentLevel > levelCount {
+		return nil, fmt.Errorf("syntax error: please check indentation.")
+	}
+
+	newSection := section{}
+
+	if currentLevel < levelCount {
+		//update
+		c.order[currentLevel] = newSection
+	} else if currentLevel == levelCount {
+		//new level
+		c.order = append(c.order, newSection)
+
+	}
+
+	return newSection, nil
+}
+
 /*
 read string line by line
 
 special symbol definition:
 #			comment
-=			simple assignment			key=value
-[]			`section`					`struct`
-[[]]		[]`section`					the array of `struct`
+=			simple assignment, key=value
+[]			`section`
+[[]]			[]`section`, the array of `section`
 
 */
 func (c *Config) parse(reader io.Reader) error {
-
 	var (
 		err  error
 		row  string
@@ -148,75 +166,84 @@ func (c *Config) parse(reader io.Reader) error {
 		}
 
 		rowNospace := strings.TrimSpace(row)
-		//none line or comment (line start with "#")
-		if len(rowNospace) == 0 || strings.HasPrefix(rowNospace, "#") {
+		// comment (line start with "#") or none line
+		if strings.HasPrefix(rowNospace, "#") || len(rowNospace) == 0 {
 			continue
 		}
 
 		currentLevel, err := c.getCurrentLevel(row)
 		if err != nil {
-			fmt.Printf("getCurrentLevel failed in line %d:%s\n", line, err)
-			return fmt.Errorf("unexpected error:%s", err)
+			return fmt.Errorf("getCurrentLevel failed in line %d:%s\n", line, err)
 		}
-
-		levelCount := len(c.order)
 
 		currentSection, err := c.getCurrentSection(currentLevel)
 		if err != nil {
-			fmt.Printf("getCurrentSection failed in line %d:%s\n", line, err)
-			return fmt.Errorf("unexpected error:%s", err)
+			return fmt.Errorf("getCurrentSection failed in line %d:%s\n", line, err)
 		}
 
 		row = rowNospace
 		rowLen := len(row)
 
-		//section[[]]
-		if strings.HasPrefix(row, "[[") && strings.HasSuffix(row, "]]") {
-			// todo
+		if strings.HasPrefix(row, "[[") && strings.HasSuffix(row, "]]") { //section[[]]
+			newSection, err := c.updateOrAddLevel(currentLevel)
+			if err != nil {
+				return fmt.Errorf("updateOrAddLevel failed in line %d:%s\n", line, err)
+			}
 
+			key := row[2 : rowLen-2]
+			key = strings.TrimSpace(key)
+
+			var newSlice []section
+			value, ok := currentSection[key]
+			if !ok {
+				// new slice
+				newSlice = []section{newSection}
+			} else {
+				// slice already exist and then just append
+				sliceTmp, ok := value.([]section)
+				if !ok {
+					return fmt.Errorf("%v not slice type in line %d", value, line)
+				}
+
+				newSlice = append(sliceTmp, newSection)
+			}
+
+			// save
+			currentSection[key] = newSlice
 		} else if strings.HasPrefix(row, "[") && strings.HasSuffix(row, "]") { //section []
-
 			key := row[1 : rowLen-1]
 			key = strings.TrimSpace(key)
 
 			value, ok := currentSection[key]
-			if !ok {
-				newSection := section{}
-				currentSection[key] = newSection
-
-				if currentLevel < levelCount {
-					// update current section
-					c.order[currentLevel] = newSection
-				} else if currentLevel == levelCount {
-					// new level
-					c.order = append(c.order, newSection)
-				}
-
-			} else {
+			if ok {
 				return fmt.Errorf("%s:%s duplicate definition in line %d", key, value, line)
 			}
 
-		} else if index := strings.Index(row, "="); index >= 0 { //spliter: "="
+			newSection, err := c.updateOrAddLevel(currentLevel)
+			if err != nil {
+				return fmt.Errorf("updateOrAddLevel failed in line %d:%s\n", line, err)
+			}
 
+			// save
+			currentSection[key] = newSection
+		} else if index := strings.Index(row, "="); index >= 0 { //"="
 			key := row[:index]
 			key = strings.TrimSpace(key)
 
 			value, ok := currentSection[key]
-			if !ok {
-				valueTmp := row[index+1:]
-				valueTmp = strings.TrimSpace(valueTmp)
-
-				currentSection[key] = valueTmp
-
-				//for test
-				fmt.Println("--->", currentSection)
-			} else {
+			if ok {
 				return fmt.Errorf("%s:%s already exist", key, value)
-
 			}
 
+			valueTmp := row[index+1:]
+			valueTmp = strings.TrimSpace(valueTmp)
+			// save
+			currentSection[key] = valueTmp
+
+			//for test
+			fmt.Println("--->", currentSection)
 		} else {
-			return fmt.Errorf("missing symbol in line %d", line)
+			return fmt.Errorf("missing separator in line %d", line)
 		}
 
 	} //for
