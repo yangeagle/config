@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"reflect"
 	"strings"
 )
 
@@ -35,8 +36,8 @@ type section map[string]interface{}
 Config type declaration
 */
 type Config struct {
-	data  section   // the top level section, including all key-value
-	order []section // current section in every level
+	allConfigOptions section   // the top level section, including all key-value
+	order            []section // current section in every level
 }
 
 /*
@@ -45,9 +46,9 @@ type Config struct {
 func NewConfig() *Config {
 	conf := Config{}
 
-	conf.data = section{}
+	conf.allConfigOptions = section{}
 	conf.order = make([]section, 0)
-	conf.order = append(conf.order, conf.data)
+	conf.order = append(conf.order, conf.allConfigOptions)
 
 	return &conf
 }
@@ -86,8 +87,8 @@ func (c *Config) ParseBytes(conf []byte) error {
 /*
 * return all key-value in map
  */
-func (c *Config) ReturnAll() section {
-	return c.data
+func (c *Config) GetAllConfigOptions() section {
+	return c.allConfigOptions
 }
 
 func (c *Config) getCurrentLevel(s string) (int, error) {
@@ -111,6 +112,7 @@ func (c *Config) getCurrentSection(currentLevel int) (section, error) {
 	return c.order[currentLevel-1], nil
 }
 
+// update the level if already exist, or add a new level
 func (c *Config) updateOrAddLevel(currentLevel int) (section, error) {
 	levelCount := len(c.order)
 	if currentLevel > levelCount {
@@ -247,6 +249,133 @@ func (c *Config) parse(reader io.Reader) error {
 		}
 
 	} //for
+
+	return nil
+}
+
+// parse content, and storage to v
+func (c *Config) Unmarshal(v interface{}) error {
+	vv := reflect.ValueOf(v)
+
+	//pointer check
+	if vv.Kind() != reflect.Ptr || vv.IsNil() {
+		return fmt.Errorf("pointer type needed and not nil.")
+	}
+
+	//derefer pointer
+	elemValue := vv.Elem()
+
+	if err := section2Struct(c.allConfigOptions, elemValue); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// section to struct
+func section2Struct(sec section, refValue reflect.Value) error {
+	//get type
+	valueType := refValue.Type()
+
+	n := refValue.NumField()
+	for i := 0; i < n; i++ {
+		fieldType := valueType.Field(i)
+		fieldValue := refValue.Field(i)
+
+		//get tag
+		fieldTag := fieldType.Tag.Get(tagName)
+
+		optionValue, ok := sec[fieldTag]
+		if !ok {
+			//this config option not exist in config file
+			continue
+		}
+
+		fmt.Printf("fieldTag:%s, optionValue: %v\n", fieldTag, optionValue)
+		fmt.Println("fieldType.Type:", fieldType.Type)
+
+		err := setOptionValue2RefValue(fieldValue, fieldType.Type, optionValue)
+		if err != nil {
+			return err
+		}
+
+	} // for n
+
+	return nil
+}
+
+/*
+description:
+	set optionValue to refValue
+
+input:
+	1. refValue
+	2. type
+	3. optionValue
+output:
+	error
+*/
+func setOptionValue2RefValue(refValue reflect.Value, valueType reflect.Type, optionValue interface{}) error {
+
+	basicType := refValue.Kind()
+	fmt.Println("basic type:", basicType)
+
+	switch basicType {
+	case reflect.String:
+		fallthrough
+	case reflect.Bool:
+		fallthrough
+	case reflect.Int:
+		fallthrough
+	case reflect.Float32:
+		fallthrough
+	case reflect.Float64:
+		optionValueStr, ok := optionValue.(string)
+		if !ok {
+			return fmt.Errorf("unknown string:%v", optionValue)
+		}
+
+		vv, err := convert2Value(valueType.String(), optionValueStr)
+		if err != nil {
+			return err
+		}
+
+		// set value
+		refValue.Set(vv)
+	case reflect.Ptr:
+		//for test
+		fmt.Println("valueType.Elem()", valueType.Elem())
+		if refValue.IsNil() {
+			//for debug
+			fmt.Println("nil pointer")
+			newinstance := reflect.New(valueType.Elem())
+			refValue.Set(newinstance)
+		}
+
+		//derefer pointer
+		refvalue_elem := refValue.Elem()
+
+		err := setOptionValue2RefValue(refvalue_elem, valueType.Elem(), optionValue)
+		if err != nil {
+			return err
+		}
+
+	case reflect.Struct:
+		sec, ok := optionValue.(section)
+		if !ok {
+			return fmt.Errorf("unknown struct")
+		}
+
+		err := section2Struct(sec, refValue)
+		if err != nil {
+			return err
+		}
+	case reflect.Slice:
+	// TODO
+
+	default:
+		return fmt.Errorf("unknown basic type:%v", basicType)
+	}
 
 	return nil
 }

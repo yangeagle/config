@@ -33,6 +33,6 @@ func main() {
 		return
 	}
 
-	allKeyValue := conf.ReturnAll()
-	fmt.Println("allKeyValue:", allKeyValue)
+	allConfigOptions := conf.GetAllConfigOptions()
+	fmt.Println("allConfigOptions:", allConfigOptions)
 }

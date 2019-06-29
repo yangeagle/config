@@ -18,6 +18,8 @@ package kitty
 
 import (
 	"fmt"
+	"reflect"
+	"strconv"
 	"strings"
 )
 
@@ -41,4 +43,57 @@ func getTabCount(s string) (int, error) {
 	}
 
 	return count, nil
+}
+
+/*
+description:
+	1.parse simple type
+	2.convert string to reflect.Value
+intput:
+	1. typ: type in string format
+	2. str: string to convert
+
+output:
+	1. reflect.Value
+	2. error
+*/
+func convert2Value(typ, str string) (reflect.Value, error) {
+	var value reflect.Value
+
+	switch typ {
+	case "bool":
+		boolTmp, err := strconv.ParseBool(str)
+		if err != nil {
+			return value, err
+		}
+
+		value = reflect.ValueOf(boolTmp)
+	case "int":
+		intTmp, err := strconv.ParseInt(str, 10, 32)
+		if err != nil {
+			return value, err
+		}
+
+		value = reflect.ValueOf(int(intTmp))
+	case "float32":
+		float32Tmp, err := strconv.ParseFloat(str, 32)
+		if err != nil {
+			return value, nil
+		}
+
+		value = reflect.ValueOf(float32(float32Tmp))
+	case "float64":
+		float64Tmp, err := strconv.ParseFloat(str, 64)
+		if err != nil {
+			return value, err
+		}
+
+		value = reflect.ValueOf(float64(float64Tmp))
+	case "string":
+		value = reflect.ValueOf(str)
+	default:
+		return value, fmt.Errorf("unknown type: %s", typ)
+	}
+
+	return value, nil
 }
