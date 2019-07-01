@@ -274,6 +274,21 @@ func (c *Config) Unmarshal(v interface{}) error {
 
 // section to struct
 func section2Struct(sec section, refValue reflect.Value) error {
+	//pointer check
+	if refValue.Kind() == reflect.Ptr {
+		if refValue.IsNil() {
+			// for test
+			fmt.Println("--->nil")
+			fmt.Println("--->", refValue.Type().Elem())
+			value_type := refValue.Type()
+			newinstance := reflect.New(value_type.Elem())
+			refValue.Set(newinstance)
+		}
+
+		//derefer pointer
+		refValue = refValue.Elem()
+	}
+
 	//get type
 	valueType := refValue.Type()
 
@@ -310,8 +325,7 @@ description:
 
 input:
 	1. refValue
-	2. type
-	3. optionValue
+	2. optionValue
 output:
 	error
 */
@@ -370,7 +384,56 @@ func setOptionValue2RefValue(refValue reflect.Value, optionValue interface{}) er
 			return err
 		}
 	case reflect.Slice:
-	// TODO
+		// to str fisrt
+		if sliceStr, ok := optionValue.(string); ok { //simple type
+			//normal type  delim:","
+			delim := ","
+
+			strs := strings.Split(sliceStr, delim)
+			valueType := refValue.Type()
+			sli := reflect.MakeSlice(valueType, 0, len(strs))
+
+			for _, str := range strs {
+				str = strings.TrimSpace(str)
+
+				vv := reflect.New(valueType.Elem())
+				vve := vv.Elem()
+
+				err := setOptionValue2RefValue(vve, str)
+				if err != nil {
+					return err
+				}
+
+				//fmt.Println("Slice element: ", vv.Interface())
+
+				sli = reflect.Append(sli, vve)
+			}
+
+			refValue.Set(sli)
+
+		} else if section_slice_tmp, ok := optionValue.([]section); ok { //composite type
+
+			valueType := refValue.Type()
+			n := len(section_slice_tmp)
+			struct_slice_tmp := reflect.MakeSlice(valueType, 0, n)
+
+			for _, sec := range section_slice_tmp {
+				vv := reflect.New(valueType.Elem())
+				vve := vv.Elem()
+
+				err := section2Struct(sec, vve)
+				if err != nil {
+					return err
+				}
+
+				struct_slice_tmp = reflect.Append(struct_slice_tmp, vve)
+			}
+
+			refValue.Set(struct_slice_tmp)
+
+		} else {
+			return fmt.Errorf("unknown string:%v", optionValue)
+		}
 
 	default:
 		return fmt.Errorf("unknown basic type:%v", basicType)
