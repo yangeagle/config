@@ -255,15 +255,15 @@ func (c *Config) parse(reader io.Reader) error {
 
 // parse content, and storage to v
 func (c *Config) Unmarshal(v interface{}) error {
-	vv := reflect.ValueOf(v)
+	refValue := reflect.ValueOf(v)
 
 	//pointer check
-	if vv.Kind() != reflect.Ptr || vv.IsNil() {
+	if refValue.Kind() != reflect.Ptr || refValue.IsNil() {
 		return fmt.Errorf("pointer type needed and not nil.")
 	}
 
 	//derefer pointer
-	elemValue := vv.Elem()
+	elemValue := refValue.Elem()
 
 	if err := section2Struct(c.allConfigOptions, elemValue); err != nil {
 		return err
@@ -294,7 +294,7 @@ func section2Struct(sec section, refValue reflect.Value) error {
 		fmt.Printf("fieldTag:%s, optionValue: %v\n", fieldTag, optionValue)
 		fmt.Println("fieldType.Type:", fieldType.Type)
 
-		err := setOptionValue2RefValue(fieldValue, fieldType.Type, optionValue)
+		err := setOptionValue2RefValue(fieldValue, optionValue)
 		if err != nil {
 			return err
 		}
@@ -315,7 +315,7 @@ input:
 output:
 	error
 */
-func setOptionValue2RefValue(refValue reflect.Value, valueType reflect.Type, optionValue interface{}) error {
+func setOptionValue2RefValue(refValue reflect.Value, optionValue interface{}) error {
 
 	basicType := refValue.Kind()
 	fmt.Println("basic type:", basicType)
@@ -335,7 +335,7 @@ func setOptionValue2RefValue(refValue reflect.Value, valueType reflect.Type, opt
 			return fmt.Errorf("unknown string:%v", optionValue)
 		}
 
-		vv, err := convert2Value(valueType.String(), optionValueStr)
+		vv, err := convert2Value(basicType.String(), optionValueStr)
 		if err != nil {
 			return err
 		}
@@ -343,23 +343,22 @@ func setOptionValue2RefValue(refValue reflect.Value, valueType reflect.Type, opt
 		// set value
 		refValue.Set(vv)
 	case reflect.Ptr:
-		//for test
-		fmt.Println("valueType.Elem()", valueType.Elem())
 		if refValue.IsNil() {
 			//for debug
 			fmt.Println("nil pointer")
-			newinstance := reflect.New(valueType.Elem())
-			refValue.Set(newinstance)
+			//element type
+			elemType := refValue.Type().Elem()
+			newValue := reflect.New(elemType)
+			refValue.Set(newValue)
 		}
 
 		//derefer pointer
-		refvalue_elem := refValue.Elem()
+		elemValue := refValue.Elem()
 
-		err := setOptionValue2RefValue(refvalue_elem, valueType.Elem(), optionValue)
+		err := setOptionValue2RefValue(elemValue, optionValue)
 		if err != nil {
 			return err
 		}
-
 	case reflect.Struct:
 		sec, ok := optionValue.(section)
 		if !ok {
