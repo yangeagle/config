@@ -277,12 +277,11 @@ func section2Struct(sec section, refValue reflect.Value) error {
 	//pointer check
 	if refValue.Kind() == reflect.Ptr {
 		if refValue.IsNil() {
-			// for test
-			fmt.Println("--->nil")
-			fmt.Println("--->", refValue.Type().Elem())
-			value_type := refValue.Type()
-			newinstance := reflect.New(value_type.Elem())
-			refValue.Set(newinstance)
+			// new
+			valueType := refValue.Type()
+			elemType := valueType.Elem()
+			newValue := reflect.New(elemType)
+			refValue.Set(newValue)
 		}
 
 		//derefer pointer
@@ -349,17 +348,15 @@ func setOptionValue2RefValue(refValue reflect.Value, optionValue interface{}) er
 			return fmt.Errorf("unknown string:%v", optionValue)
 		}
 
-		vv, err := convert2Value(basicType.String(), optionValueStr)
+		newValue, err := convert2Value(basicType.String(), optionValueStr)
 		if err != nil {
 			return err
 		}
 
 		// set value
-		refValue.Set(vv)
+		refValue.Set(newValue)
 	case reflect.Ptr:
 		if refValue.IsNil() {
-			//for debug
-			fmt.Println("nil pointer")
 			//element type
 			elemType := refValue.Type().Elem()
 			newValue := reflect.New(elemType)
@@ -384,53 +381,53 @@ func setOptionValue2RefValue(refValue reflect.Value, optionValue interface{}) er
 			return err
 		}
 	case reflect.Slice:
-		// to str fisrt
+		// value type
+		valueType := refValue.Type()
+		// element type
+		elemType := valueType.Elem()
+
+		// the slice of string
 		if sliceStr, ok := optionValue.(string); ok { //simple type
-			//normal type  delim:","
-			delim := ","
+			sep := ","
+			strs := strings.Split(sliceStr, sep)
+			// new slice
+			newSlice := reflect.MakeSlice(valueType, 0, len(strs))
 
-			strs := strings.Split(sliceStr, delim)
-			valueType := refValue.Type()
-			sli := reflect.MakeSlice(valueType, 0, len(strs))
-
+			// every element
 			for _, str := range strs {
 				str = strings.TrimSpace(str)
 
-				vv := reflect.New(valueType.Elem())
-				vve := vv.Elem()
+				newValue := reflect.New(elemType)
+				newElemValue := newValue.Elem()
 
-				err := setOptionValue2RefValue(vve, str)
+				err := setOptionValue2RefValue(newElemValue, str)
 				if err != nil {
 					return err
 				}
 
-				//fmt.Println("Slice element: ", vv.Interface())
-
-				sli = reflect.Append(sli, vve)
+				// append
+				newSlice = reflect.Append(newSlice, newElemValue)
 			}
 
-			refValue.Set(sli)
+			refValue.Set(newSlice)
+		} else if sliceSection, ok := optionValue.([]section); ok { //composite type
+			// new slice
+			newSlice := reflect.MakeSlice(valueType, 0, len(sliceSection))
 
-		} else if section_slice_tmp, ok := optionValue.([]section); ok { //composite type
+			// every element
+			for _, sec := range sliceSection {
+				newValue := reflect.New(elemType)
+				newElemValue := newValue.Elem()
 
-			valueType := refValue.Type()
-			n := len(section_slice_tmp)
-			struct_slice_tmp := reflect.MakeSlice(valueType, 0, n)
-
-			for _, sec := range section_slice_tmp {
-				vv := reflect.New(valueType.Elem())
-				vve := vv.Elem()
-
-				err := section2Struct(sec, vve)
+				err := section2Struct(sec, newElemValue)
 				if err != nil {
 					return err
 				}
 
-				struct_slice_tmp = reflect.Append(struct_slice_tmp, vve)
+				newSlice = reflect.Append(newSlice, newElemValue)
 			}
 
-			refValue.Set(struct_slice_tmp)
-
+			refValue.Set(newSlice)
 		} else {
 			return fmt.Errorf("unknown string:%v", optionValue)
 		}
