@@ -274,23 +274,27 @@ func (c *Config) Unmarshal(v interface{}) error {
 
 // section to struct
 func section2Struct(sec section, refValue reflect.Value) error {
+	//get type
+	valueType := refValue.Type()
+
 	//pointer check
 	if refValue.Kind() == reflect.Ptr {
 		if refValue.IsNil() {
 			// new
-			valueType := refValue.Type()
+			// element type, eg. *struct --> struct
 			elemType := valueType.Elem()
+			// *struct
 			newValue := reflect.New(elemType)
 			refValue.Set(newValue)
 		}
 
 		//derefer pointer
 		refValue = refValue.Elem()
+		// element type
+		valueType = refValue.Type()
 	}
 
-	//get type
-	valueType := refValue.Type()
-
+	// fields
 	n := refValue.NumField()
 	for i := 0; i < n; i++ {
 		fieldType := valueType.Field(i)
