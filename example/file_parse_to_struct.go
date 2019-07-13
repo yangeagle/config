@@ -45,7 +45,6 @@ type PortalConf struct {
 }
 
 type MacConf struct {
-	//	Mac1	string		`kitty:"mac1"`
 	Mac1 *string `kitty:"mac1"`
 	Mac2 string  `kitty:"mac2"`
 }
@@ -58,57 +57,57 @@ type MonitorConf struct {
 	Cluster []*string `kitty:"clust"`
 }
 
-type Conf struct {
-	Hostname string    `kitty:"host"`
-	Addr     string    `kitty:"ipaddr"`
-	PortNum  int       `kitty:"port"`
-	PortNum1 *int      `kitty:"port"`
-	Status   string    `kitty:"compression"`
-	Height   []float32 `kitty:"height"`
-	Active   bool      `kitty:"active"`
-	Clusters []string  `kitty:"cluster"`
-	Dist     int       `kitty:"distance"`
-	Temp     float64   `kitty:"temprature"`
-	Level    int       `kitty:"top_level"`
-	NumConn  int       `kitty:"max_conn"`
-	PortSW   bool      `kitty:"port_enable"`
-	Order    []int     `kitty:"order"`
-	//	Monitor		*MonitorConf	`kitty:"monitor"`
-	Monitor MonitorConf `kitty:"monitor"`
-	Portal  PortalConf  `kitty:"portal"`
+type ConfigOption struct {
+	Hostname string      `kitty:"host"`
+	Addr     string      `kitty:"ipaddr"`
+	PortNum  int         `kitty:"port"`
+	Status   string      `kitty:"compression"`
+	Height   []float32   `kitty:"height"`
+	Active   bool        `kitty:"active"`
+	Clusters []string    `kitty:"cluster"`
+	Dist     int         `kitty:"distance"`
+	Temp     float64     `kitty:"temprature"`
+	Level    *int        `kitty:"top_level"`
+	NumConn  int         `kitty:"max_conn"`
+	PortSW   bool        `kitty:"port_enable"`
+	Order    []int       `kitty:"order"`
+	Monitor  MonitorConf `kitty:"monitor"`
+	Portal   PortalConf  `kitty:"portal"`
 }
 
-const configfile = "test.conf"
+const configFile = "test.conf"
 
 func main() {
 
-	conf := kitty.NewConfig()
+	parser := kitty.NewConfig()
 
-	err := conf.ParseFile(configfile)
+	err := parser.ParseFile(configFile)
 	if err != nil {
-		fmt.Println("parse eror:", err)
+		fmt.Println("ParseFile failed:", err)
 		return
 	}
 
-	conf_info := new(Conf)
-	conf_info.Dist = 90
+	confOption := new(ConfigOption)
 
-	var a int = 2
-	conf_info.PortNum1 = &a
-
-	conf_info.Portal.Web1 = new(WebConf)
-
-	//no use
-	/*for _, v := range conf_info.Portal.Clusters1 {
-		v = new(ClusterConf)
-	}*/
-
-	err_u := conf.Unmarshal(conf_info)
-	if err_u != nil {
-		fmt.Println("err_u:", err_u)
+	err = parser.Unmarshal(confOption)
+	if err != nil {
+		fmt.Println("Unmarshal failed:", err)
 		return
 	}
 
-	fmt.Println("conf_info:", conf_info)
-
+	fmt.Println("Hostname:", confOption.Hostname)
+	fmt.Println("Addr:", confOption.Addr)
+	fmt.Println("Port:", confOption.PortNum)
+	fmt.Println("Status:", confOption.Status)
+	fmt.Println("Height:", confOption.Height)
+	fmt.Println("Active:", confOption.Active)
+	fmt.Println("Clusters:", confOption.Clusters)
+	fmt.Println("Dist:", confOption.Dist)
+	fmt.Println("Temp:", confOption.Temp)
+	fmt.Println("TopLevel:", *confOption.Level)
+	fmt.Println("NumConn:", confOption.NumConn)
+	fmt.Println("PortSW:", confOption.PortSW)
+	fmt.Println("Order:", confOption.Order)
+	fmt.Println("Monitor:", confOption.Monitor)
+	fmt.Println("Portal:", confOption.Portal)
 }

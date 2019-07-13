@@ -24,15 +24,18 @@ import (
 
 func main() {
 
-	conf := kitty.NewConfig()
+	parser := kitty.NewConfig()
 
 	configFile := "./test.conf"
 
-	if err := conf.ParseFile(configFile); err != nil {
+	if err := parser.ParseFile(configFile); err != nil {
 		fmt.Printf("parse file %s failed: %s", configFile, err)
 		return
 	}
 
-	allConfigOptions := conf.GetAllConfigOptions()
-	fmt.Println("allConfigOptions:", allConfigOptions)
+	allConfigOptions := parser.GetAllConfigOptions()
+
+	for option, value := range allConfigOptions {
+		fmt.Println(option, ":", value)
+	}
 }

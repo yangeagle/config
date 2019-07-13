@@ -45,13 +45,16 @@ height = 8848.996
 
 func main() {
 
-	conf := kitty.NewConfig()
+	parser := kitty.NewConfig()
 
-	if err := conf.ParseBytes(configBytes); err != nil {
+	if err := parser.ParseBytes(configBytes); err != nil {
 		fmt.Printf("parse str failed: %s", err)
 		return
 	}
 
-	allKeyValue := conf.ReturnAll()
-	fmt.Println("allKeyValue:", allKeyValue)
+	allConfigOptions := parser.GetAllConfigOptions()
+
+	for option, value := range allConfigOptions {
+		fmt.Println(option, ":", value)
+	}
 }
