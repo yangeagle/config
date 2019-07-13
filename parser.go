@@ -242,8 +242,6 @@ func (c *Config) parse(reader io.Reader) error {
 			// save
 			currentSection[key] = valueTmp
 
-			//for test
-			fmt.Println("--->", currentSection)
 		} else {
 			return fmt.Errorf("missing separator in line %d", line)
 		}
@@ -309,9 +307,6 @@ func section2Struct(sec section, refValue reflect.Value) error {
 			continue
 		}
 
-		fmt.Printf("fieldTag:%s, optionValue: %v\n", fieldTag, optionValue)
-		fmt.Println("fieldType.Type:", fieldType.Type)
-
 		err := setOptionValue2RefValue(fieldValue, optionValue)
 		if err != nil {
 			return err
@@ -335,7 +330,6 @@ output:
 func setOptionValue2RefValue(refValue reflect.Value, optionValue interface{}) error {
 
 	basicType := refValue.Kind()
-	fmt.Println("basic type:", basicType)
 
 	switch basicType {
 	case reflect.String:
@@ -361,8 +355,10 @@ func setOptionValue2RefValue(refValue reflect.Value, optionValue interface{}) er
 		refValue.Set(newValue)
 	case reflect.Ptr:
 		if refValue.IsNil() {
-			//element type
+			// new
+			//element type, eg. *int --> int
 			elemType := refValue.Type().Elem()
+			// pointer
 			newValue := reflect.New(elemType)
 			refValue.Set(newValue)
 		}
@@ -387,7 +383,7 @@ func setOptionValue2RefValue(refValue reflect.Value, optionValue interface{}) er
 	case reflect.Slice:
 		// value type
 		valueType := refValue.Type()
-		// element type
+		// element type, eg. []string --> string
 		elemType := valueType.Elem()
 
 		// the slice of string
@@ -401,6 +397,7 @@ func setOptionValue2RefValue(refValue reflect.Value, optionValue interface{}) er
 			for _, str := range strs {
 				str = strings.TrimSpace(str)
 
+				// pointer
 				newValue := reflect.New(elemType)
 				newElemValue := newValue.Elem()
 
@@ -420,6 +417,7 @@ func setOptionValue2RefValue(refValue reflect.Value, optionValue interface{}) er
 
 			// every element
 			for _, sec := range sliceSection {
+				//pointer
 				newValue := reflect.New(elemType)
 				newElemValue := newValue.Elem()
 
