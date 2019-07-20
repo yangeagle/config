@@ -56,11 +56,11 @@ order = 98, 652, 31, 599, 566, 12, 208
 
 ### install
 ```
-go get github.com:yangeagle/kitty
+go get github.com/yangeagle/kitty
 ```
 You can also update an already installed version:
 ```
-go get -u github.com:yangeagle/kitty
+go get -u github.com/yangeagle/kitty
 ```
 
 ### example config file
@@ -105,7 +105,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/kitty"
+	"github.com/yangeagle/kitty"
 )
 
 type ConfigOption struct {

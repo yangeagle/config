@@ -19,7 +19,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/kitty"
+	"github.com/yangeagle/kitty"
 )
 
 type WebConf struct {
