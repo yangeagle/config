@@ -52,9 +52,18 @@ order = 98, 652, 31, 599, 566, 12, 208
 		wgh = 10
 ```
 
-## example
+## Getting Started
 
-### config file
+### install
+```
+go get github.com:yangeagle/kitty
+```
+You can also update an already installed version:
+```
+go get -u github.com:yangeagle/kitty
+```
+
+### example config file
 config file named `simple.conf` like this:
 ```
 #comment like this
@@ -87,7 +96,7 @@ max_conn = 68182
 
 order = 98, 652, 31, 599, 566, 12, 208
 ```
-### config file parse
+### example code
 
 The code like this:
 ```go
