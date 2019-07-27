@@ -1,8 +1,8 @@
 # kitty
 
-The `kitty` is a configuration parser that can parse configuration files and more.
+The `kitty` is a configuration file parse module.
 
-Compared to the json format, `kitty` is simple and easy to use.
+In `kitty` a new configuration format defined is simple and easy to use, compared to the json format.
 
 ## configuration syntax
 
