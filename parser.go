@@ -14,7 +14,7 @@
 limitations under the License.
 */
 
-package kitty
+package config
 
 import (
 	"bufio"
@@ -27,7 +27,7 @@ import (
 )
 
 const (
-	tagName = "kitty"
+	tagName = "config"
 )
 
 type section map[string]interface{}

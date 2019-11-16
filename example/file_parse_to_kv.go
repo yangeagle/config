@@ -19,12 +19,12 @@ package main
 import (
 	"fmt"
 
-	"github.com/yangeagle/kitty"
+	"github.com/yangeagle/config"
 )
 
 func main() {
 
-	parser := kitty.NewConfig()
+	parser := config.NewConfig()
 
 	configFile := "./test.conf"
 

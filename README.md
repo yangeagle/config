@@ -1,8 +1,8 @@
-# kitty
+# config
 
-The `kitty` is a configuration file parse module.
+The `config` is a configuration file parse module.
 
-In `kitty` a new configuration format defined is simple and easy to use, compared to the json format.
+In `config` a new configuration format defined is simple and easy to use, compared to the json format.
 
 ## configuration syntax
 
@@ -56,11 +56,11 @@ order = 98, 652, 31, 599, 566, 12, 208
 
 ### install
 ```
-go get github.com/yangeagle/kitty
+go get github.com/yangeagle/config
 ```
 You can also update an already installed version:
 ```
-go get -u github.com/yangeagle/kitty
+go get -u github.com/yangeagle/config
 ```
 
 ### example config file
@@ -105,28 +105,28 @@ package main
 import (
 	"fmt"
 
-	"github.com/yangeagle/kitty"
+	"github.com/yangeagle/config"
 )
 
 type ConfigOption struct {
-	Hostname string    `kitty:"host"`
-	Addr     string    `kitty:"ipaddr"`
-	PortNum  int       `kitty:"port"`
-	Height   []float32 `kitty:"height"`
-	Active   bool      `kitty:"active"`
-	Clusters []string  `kitty:"cluster"`
-	Dist     int       `kitty:"distance"`
-	Temp     float64   `kitty:"temprature"`
-	TopLevel *int      `kitty:"top_level"`
-	NumConn  int       `kitty:"max_conn"`
-	Order    []int     `kitty:"order"`
+	Hostname string    `config:"host"`
+	Addr     string    `config:"ipaddr"`
+	PortNum  int       `config:"port"`
+	Height   []float32 `config:"height"`
+	Active   bool      `config:"active"`
+	Clusters []string  `config:"cluster"`
+	Dist     int       `config:"distance"`
+	Temp     float64   `config:"temprature"`
+	TopLevel *int      `config:"top_level"`
+	NumConn  int       `config:"max_conn"`
+	Order    []int     `config:"order"`
 }
 
 const configFile = "simple.conf"
 
 func main() {
 
-	confParser := kitty.NewConfig()
+	confParser := config.NewConfig()
 
 	err := confParser.ParseFile(configFile)
 	if err != nil {
@@ -156,5 +156,5 @@ func main() {
 }
 ```
 
-For more examples, please refer to the [example](https://github.com/yangeagle/kitty/tree/master/example) directory.
+For more examples, please refer to the [example](https://github.com/yangeagle/config/tree/master/example) directory.
  

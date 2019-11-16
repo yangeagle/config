@@ -14,7 +14,7 @@
 limitations under the License.
 */
 
-package kitty
+package config
 
 import (
 	"fmt"

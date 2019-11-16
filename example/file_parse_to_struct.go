@@ -19,67 +19,67 @@ package main
 import (
 	"fmt"
 
-	"github.com/yangeagle/kitty"
+	"github.com/yangeagle/config"
 )
 
 type WebConf struct {
-	IP  string `kitty:"ip"`
-	Mac string `kitty:"mac"`
+	IP  string `config:"ip"`
+	Mac string `config:"mac"`
 }
 
 type ClusterConf struct {
-	Ipaddr string `kitty:"addr"`
-	Weight int    `kitty:"wgh"`
+	Ipaddr string `config:"addr"`
+	Weight int    `config:"wgh"`
 }
 
 type PortalConf struct {
-	Enabled     bool           `kitty:"enabled"`
-	Ip          string         `kitty:"ip"`
-	Port        int            `kitty:"port"`
-	Clusters    []ClusterConf  `kitty:"cluster"`
-	Clusters1   []*ClusterConf `kitty:"cluster"`
-	ConnTimeout int            `kitty:"connecttimeout"`
-	CallTimeout int            `kitty:"calltimeout"`
-	Web         WebConf        `kitty:"web"`
-	Web1        *WebConf       `kitty:"web1"`
+	Enabled     bool           `config:"enabled"`
+	Ip          string         `config:"ip"`
+	Port        int            `config:"port"`
+	Clusters    []ClusterConf  `config:"cluster"`
+	Clusters1   []*ClusterConf `config:"cluster"`
+	ConnTimeout int            `config:"connecttimeout"`
+	CallTimeout int            `config:"calltimeout"`
+	Web         WebConf        `config:"web"`
+	Web1        *WebConf       `config:"web1"`
 }
 
 type MacConf struct {
-	Mac1 *string `kitty:"mac1"`
-	Mac2 string  `kitty:"mac2"`
+	Mac1 *string `config:"mac1"`
+	Mac2 string  `config:"mac2"`
 }
 
 type MonitorConf struct {
-	Enabled bool      `kitty:"enabled"`
-	IP      string    `kitty:"ip"`
-	Macs    MacConf   `kitty:"MAC"`
-	Port    int       `kitty:"port"`
-	Cluster []*string `kitty:"clust"`
+	Enabled bool      `config:"enabled"`
+	IP      string    `config:"ip"`
+	Macs    MacConf   `config:"MAC"`
+	Port    int       `config:"port"`
+	Cluster []*string `config:"clust"`
 }
 
 type ConfigOption struct {
-	Hostname string      `kitty:"host"`
-	Addr     string      `kitty:"ipaddr"`
-	PortNum  int         `kitty:"port"`
-	Status   string      `kitty:"compression"`
-	Height   []float32   `kitty:"height"`
-	Active   bool        `kitty:"active"`
-	Clusters []string    `kitty:"cluster"`
-	Dist     int         `kitty:"distance"`
-	Temp     float64     `kitty:"temprature"`
-	Level    *int        `kitty:"top_level"`
-	NumConn  int         `kitty:"max_conn"`
-	PortSW   bool        `kitty:"port_enable"`
-	Order    []int       `kitty:"order"`
-	Monitor  MonitorConf `kitty:"monitor"`
-	Portal   PortalConf  `kitty:"portal"`
+	Hostname string      `config:"host"`
+	Addr     string      `config:"ipaddr"`
+	PortNum  int         `config:"port"`
+	Status   string      `config:"compression"`
+	Height   []float32   `config:"height"`
+	Active   bool        `config:"active"`
+	Clusters []string    `config:"cluster"`
+	Dist     int         `config:"distance"`
+	Temp     float64     `config:"temprature"`
+	Level    *int        `config:"top_level"`
+	NumConn  int         `config:"max_conn"`
+	PortSW   bool        `config:"port_enable"`
+	Order    []int       `config:"order"`
+	Monitor  MonitorConf `config:"monitor"`
+	Portal   PortalConf  `config:"portal"`
 }
 
 const configFile = "test.conf"
 
 func main() {
 
-	parser := kitty.NewConfig()
+	parser := config.NewConfig()
 
 	err := parser.ParseFile(configFile)
 	if err != nil {

@@ -19,28 +19,28 @@ package main
 import (
 	"fmt"
 
-	"github.com/yangeagle/kitty"
+	"github.com/yangeagle/config"
 )
 
 type ConfigOption struct {
-	Hostname string    `kitty:"host"`
-	Addr     string    `kitty:"ipaddr"`
-	PortNum  int       `kitty:"port"`
-	Height   []float32 `kitty:"height"`
-	Active   bool      `kitty:"active"`
-	Clusters []string  `kitty:"cluster"`
-	Dist     int       `kitty:"distance"`
-	Temp     float64   `kitty:"temprature"`
-	TopLevel *int      `kitty:"top_level"`
-	NumConn  int       `kitty:"max_conn"`
-	Order    []int     `kitty:"order"`
+	Hostname string    `config:"host"`
+	Addr     string    `config:"ipaddr"`
+	PortNum  int       `config:"port"`
+	Height   []float32 `config:"height"`
+	Active   bool      `config:"active"`
+	Clusters []string  `config:"cluster"`
+	Dist     int       `config:"distance"`
+	Temp     float64   `config:"temprature"`
+	TopLevel *int      `config:"top_level"`
+	NumConn  int       `config:"max_conn"`
+	Order    []int     `config:"order"`
 }
 
 const configFile = "simple.conf"
 
 func main() {
 
-	confParser := kitty.NewConfig()
+	confParser := config.NewConfig()
 
 	err := confParser.ParseFile(configFile)
 	if err != nil {

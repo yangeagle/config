@@ -19,7 +19,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/yangeagle/kitty"
+	"github.com/yangeagle/config"
 )
 
 var configBytes []byte = []byte(`
@@ -45,7 +45,7 @@ height = 8848.996
 
 func main() {
 
-	parser := kitty.NewConfig()
+	parser := config.NewConfig()
 
 	if err := parser.ParseBytes(configBytes); err != nil {
 		fmt.Printf("parse str failed: %s", err)
